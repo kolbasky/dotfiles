@@ -16,6 +16,7 @@ syntax on
 nnoremap <C-e> <C-w>
 set pastetoggle=<F2>
 nmap <F3> :set invnumber<CR>
+nmap <F1> :Files<CR>
 
 call plug#begin('~/.vim/plugged')
 Plug 'scrooloose/nerdtree'
