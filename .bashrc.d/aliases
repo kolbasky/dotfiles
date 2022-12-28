@@ -1,2 +1,2 @@
 alias s="ssh"
-alias ll="ls -l"
+alias ll="ls -la"
