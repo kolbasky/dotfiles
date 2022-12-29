@@ -26,9 +26,6 @@ if [[ `grep -c 'for file in ~/.bashrc.d/\*; do source $file; done' ~/.bashrc` -e
   echo 'for file in ~/.bashrc.d/*; do source $file; done' >> ~/.bashrc
 fi
 
-printf '\nCreating vim backup directory\n'
-mkdir ~/.vim/tmp
-
 tmux source ~/.tmux.conf
 source ~/.bashrc
 
