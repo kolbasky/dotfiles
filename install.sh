@@ -3,9 +3,11 @@
 shopt -s extglob
 export GLOBIGNORE=NULL
 SRCDIR=`dirname $0`
+EXCLUDE="$@"
+EXCLUDE=".git|install.sh|${EXCLUDE// /\|}"
 
 printf '\nCopying dotfiles and dotdirs...\n'
-cp -arv $SRCDIR/!(.git|install.sh|$1) ~/
+cp -iarv $SRCDIR/!($EXCLUDE) ~/
 
 printf '\nCloning Vim Plug...\n'
 curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
