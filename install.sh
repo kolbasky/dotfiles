@@ -7,16 +7,16 @@ EXCLUDE="$@"
 EXCLUDE=".|..|.git|install.sh|${EXCLUDE// /\|}"
 
 printf '\nCopying dotfiles and dotdirs...\n'
-cp -iarv $SRCDIR/!($EXCLUDE) ~/
+cp -arv --backup $SRCDIR/!($EXCLUDE) ~/
 
-printf '\nCloning Vim Plug...\n'
-curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+printf '\nDownloading Vim Plug...\n'
+curl -sfLo ~/.vim/autoload/plug.vim --create-dirs \
   https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
 printf '\nInstalling Vim plugins...\n'
 vi +PlugInstall +qall
 
-printf '\nCloning Tmux Plugin Manager - TPM...\n'
+printf '\nCloning Tmux Plugin Manager...\n'
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
 printf '\nIn tmux press Ctrl+B - I(capital) to install plugins.\n'
@@ -26,8 +26,8 @@ if [[ `grep -c 'for file in ~/.bashrc.d/\*; do source $file; done' ~/.bashrc` -e
   echo 'for file in ~/.bashrc.d/*; do source $file; done' >> ~/.bashrc
 fi
 
-printf '\nCreating vim backup directory\n'
-mkdir ~/.vim/tmp
+printf '\nCreating vim backup directory...\n'
+mkdir ~/.vim/tmp 2> /dev/null
 
 tmux source ~/.tmux.conf
 source ~/.bashrc
