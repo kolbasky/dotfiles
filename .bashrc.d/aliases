@@ -1,5 +1,5 @@
 sshps1() {
-  ssh -A -t $1 "bash --rcfile <(echo '. ~/.bashrc; PS1=\"\[\$(tput setaf 3)\]\n$(printf "\xE2\x94\x8C")[\u@\h]-[\t]\n$(printf "\xE2\x94\x94")[\w]\\$\[$(tput sgr0)\] \"')"
+  ssh -A -t $1 "bash --rcfile <(echo '. ~/.bashrc; PS1=\"\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x8C")[\u@\h]-[\t]\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x94")[\w]\\$\[$(tput sgr0)\] \"')"
 }
 alias s="sshps1"
 alias ll="ls -la"
