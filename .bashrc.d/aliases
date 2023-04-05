@@ -1,5 +1,5 @@
 sshps1() {
-  ssh -A -t $1 "bash --rcfile <(echo '. ~/.bashrc; PS1=\"\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x8C")[\u@\h]-[\t]\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x94")[\w]\\$\[$(tput sgr0)\] \"')"
+  ssh -A -t $1 "bash --rcfile <(echo '. ./.bashrc ; PS1=\"\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x8C")[\u@\h]-[\t]\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x94")[\w]\\$\[$(tput sgr0)\] \"')"
 }
 alias s="sshps1"
 alias ll="ls -la"
@@ -7,8 +7,8 @@ alias gitpall="find ~/git/* -maxdepth 0 -type d | xargs -P 6 -I{} sh -c \"git -C
 hgrep() {
   grep -i "$1" `find ~/git/ -type f -name hosts` | grep "\..*\." | sed 's/:/~/' | awk -F"~" '{print $2"\t"$1}' | grep -v "/home/eg.efremov/git/tmp"  | grep -v "^#" | grep -v "^;" | column -t
 }
-alias genpwd="openssl rand -base64 25 | sed 's/[\/+=]//g' | cut -c 1-17"
+alias genpwd="openssl rand -base64 25 | sed 's/[\/+=]//g' | cut -c 2-18"
 alias genpwdv="ansible-vault encrypt_string $(genpwd) 2> /dev/null"
 vdecr() {
-  echo $1 | sed 's/ /\n/g' | ansible-vault decrypt 2> /dev/null | tail -n 1
+  echo $1 | sed 's/ /\n/g' | sed '/\!vault.*/d' | sed '/|.*/d' | sed '/^$/d' | ansible-vault decrypt 2> /dev/null | tail -n 1
 }
