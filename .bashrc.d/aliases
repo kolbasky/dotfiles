@@ -10,5 +10,5 @@ hgrep() {
 alias genpwd="openssl rand -base64 25 | sed 's/[\/+=]//g' | cut -c 2-18"
 alias genpwdv="ansible-vault encrypt_string $(genpwd) 2> /dev/null"
 vdecr() {
-  echo $1 | sed 's/ /\n/g' | sed '/\!vault.*/d' | sed '/|.*/d' | sed '/^$/d' | ansible-vault decrypt 2> /dev/null | tail -n 1
+  echo $1 | sed 's/ /\n/g' | sed '/\!vault\||\|^$/d' | ansible-vault decrypt 2> /dev/null | tail -n 1
 }
