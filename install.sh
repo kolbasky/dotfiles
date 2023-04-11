@@ -9,6 +9,10 @@ EXCLUDE=".|..|.git|install.sh|${EXCLUDE// /\|}"
 printf '\nCopying dotfiles and dotdirs...\n'
 cp -arv --backup $SRCDIR/!($EXCLUDE) ~/
 
+printf '\nInstalling fzf..'
+git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+~/.fzf/install
+
 printf '\nDownloading Vim Plug...\n'
 curl -sfLo ~/.vim/autoload/plug.vim --create-dirs \
   https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim

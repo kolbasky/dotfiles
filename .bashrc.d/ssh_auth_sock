@@ -1,0 +1,2 @@
+export SSH_AUTH_SOCK=~/.ssh/ssh_auth_sock
+ln -sf $(sudo find /tmp/ -user eg.efremov -regex .*ssh.*agent.* -printf "%T@ %Tc %p\n" | sort -n  -r | head -n1 | grep -o "[^ ]*$") ~/.ssh/ssh_auth_sock

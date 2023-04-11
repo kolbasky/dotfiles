@@ -1,8 +1,8 @@
 sshps1() {
-  ssh -A -t $1 "bash --rcfile <(echo '. ./.bashrc ; PS1=\"\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x8C")[\u@\h]-[\t]\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x94")[\w]\\$\[$(tput sgr0)\] \"')"
+  ssh -o "StrictHostKeyChecking=no" -A -t $1 "bash --rcfile <(echo '. ~/.bashrc ; PS1=\"\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x8C")[\u@\h]-[\t]\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x94")[\w]\\$\[$(tput sgr0)\] \"')"
 }
 alias s="sshps1"
-alias ll="ls -la"
+alias ll="ls -lh"
 alias gitpall="find ~/git/* -maxdepth 0 -type d | xargs -P 6 -I{} sh -c \"git -C {} pull\""
 hgrep() {
   grep -i "$1" `find ~/git/ -type f -name hosts` | grep "\..*\." | sed 's/:/~/' | awk -F"~" '{print $2"\t"$1}' | grep -v "/home/eg.efremov/git/tmp"  | grep -v "^#" | grep -v "^;" | column -t
@@ -10,5 +10,34 @@ hgrep() {
 alias genpwd="openssl rand -base64 25 | sed 's/[\/+=]//g' | cut -c 2-18"
 alias genpwdv="ansible-vault encrypt_string $(genpwd) 2> /dev/null"
 vdecr() {
-  echo $1 | sed 's/ /\n/g' | sed '/\!vault\||\|^$/d' | ansible-vault decrypt 2> /dev/null | tail -n 1
+  unset IFS
+  if [[ -n "$1" ]]; then
+    if [[ -f "$1" ]]; then
+      if [[ $(head -n1 "$1") == "\$ANSIBLE_VAULT;1.1;AES256" ]]; then
+        cat "$1" | ansible-vault decrypt 2> /dev/null
+        return 0
+      fi
+      printf 'Found a file "'$1'". Reading vault values from it...\n\n'
+      IFS="#"
+      for v in `grep "\\$ANSIBLE_VAULT" -B1 -A5 "$1" | sed 's/--/#/g'`;do 
+        if [[ "$v" != "" ]]; then 
+          printf "$v" | grep -o "^.*: " | xargs && printf '  ' && vdecr "$v"; 
+        fi ; 
+      done
+      unset IFS
+      return 0
+    fi
+    local str="$1"
+  elif test ! -t 0; then
+    local str=$(cat)
+  else
+    printf 'Interactive mode. Paste encrypted string and press Ctrl-D two times to confirm.\n'
+    local str=$(cat)
+    printf '\n'
+  fi
+  printf -- "$str" | sed 's/ /\n/g' | \
+  sed '/---\|^.*:\|\!vault\||\|^$/d' | \
+  ansible-vault decrypt 2> /dev/null | \
+  tail -n1
+  printf '\n'
 }

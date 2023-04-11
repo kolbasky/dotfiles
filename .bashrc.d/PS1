@@ -32,7 +32,7 @@ promptCommand () {
   then
     local PY=`which python`;
     local VENV=`
-      printf "  ${BLUE}${SNAKE}v$(if [[ ! -z ${PY} ]];then python -V 2>&1 ; else python3 -V;fi | cut -b 8-10)-$(basename ${VIRTUAL_ENV})";
+      printf "  ${BLUE}${SNAKE}v$(if [[ ! -z ${PY} ]];then python -V 2>&1 ; else python3 -V;fi | cut -b 8-10):$(basename ${VIRTUAL_ENV})";
     `;
   fi;
   if [[ $TERM == "screen" ]] || [[ -n $TMUX ]];
