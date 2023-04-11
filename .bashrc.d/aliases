@@ -5,7 +5,7 @@ alias s="sshps1"
 alias ll="ls -lh"
 alias gitpall="find ~/git/* -maxdepth 0 -type d | xargs -P 6 -I{} sh -c \"git -C {} pull\""
 hgrep() {
-  grep -i "$1" `find ~/git/ -type f -name hosts` | grep "\..*\." | sed 's/:/~/' | awk -F"~" '{print $2"\t"$1}' | grep -v "/home/eg.efremov/git/tmp"  | grep -v "^#" | grep -v "^;" | column -t
+  grep -i "$1" `find ~/git/ -type f -name hosts` | grep "\..*\." | sed 's/:/~/' | awk -F"~" '{print $2"\t"$1}' | grep -v "${HOME}/git/tmp"  | grep -v "^#" | grep -v "^;" | column -t
 }
 alias genpwd="openssl rand -base64 25 | sed 's/[\/+=]//g' | cut -c 2-18"
 alias genpwdv="ansible-vault encrypt_string $(genpwd) 2> /dev/null"
