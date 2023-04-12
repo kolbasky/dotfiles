@@ -3,7 +3,7 @@ sshps1() {
 }
 alias s="sshps1"
 alias ll="ls -lh"
-alias gitpall="find ~/git/* -maxdepth 0 -type d | xargs -P 6 -I{} sh -c \"git -C {} pull\""
+alias gitpall="find ~/git/* ~/git/ansible-roles/* -maxdepth 0 -type d | xargs -P 6 -I{} sh -c \"git -C {} pull -v\""
 hgrep() {
   grep -i "$1" `find ~/git/ -type f -name hosts` | grep "\..*\." | sed 's/:/~/' | awk -F"~" '{print $2"\t"$1}' | grep -v "${HOME}/git/tmp"  | grep -v "^#" | grep -v "^;" | column -t
 }
@@ -11,30 +11,44 @@ alias genpwd="openssl rand -base64 25 | sed 's/[\/+=]//g' | cut -c 2-18"
 alias genpwdv="ansible-vault encrypt_string $(genpwd) 2> /dev/null"
 vdecr() {
   unset IFS
+  # if we have an argument, check wether it is a file.
   if [[ -n "$1" ]]; then
     if [[ -f "$1" ]]; then
+      # if argument is a file check if it is fully encrypted file and cat it to decrypt
       if [[ $(head -n1 "$1") == "\$ANSIBLE_VAULT;1.1;AES256" ]]; then
         cat "$1" | ansible-vault decrypt 2> /dev/null
         return 0
       fi
-      printf 'Found a file "'$1'". Reading vault values from it...\n\n'
+      # if argument is a file, but not fully encrypted, grep for vault vaules in it
+      # grep uses -- as separator, and IFS is one symbol long, using - as IFS would break some variables
+      # replace -- with #
+      # if vault vars go one after another without empty line, grep won't print separator.
+      # so add # in between
+      printf 'Reading vault values from file...\n\n'
       IFS="#"
-      for v in `grep "\\$ANSIBLE_VAULT" -B1 -A5 "$1" | sed 's/--/#/g'`;do 
+      for v in `grep "\!vault |" -A6 "$1" | sed 's/^--$/#/g' | sed -r 's/^(.*:)/#\n\1/g'`;do 
         if [[ "$v" != "" ]]; then 
+          # print var name and pass string to vdecr. xargs trims spaces.
           printf "$v" | grep -o "^.*: " | xargs && printf '  ' && vdecr "$v"; 
         fi ; 
       done
       unset IFS
       return 0
     fi
+    # if argumnent is not a file, just set variable
     local str="$1"
-  elif test ! -t 0; then
+  # if STDIN is not terminal, read from STDIN
+  elif [[ ! -t 0 ]]; then
     local str=$(cat)
+  # if STDIN is a terminal, print message and read from STDIN
   else
     printf 'Interactive mode. Paste encrypted string and press Ctrl-D two times to confirm.\n'
     local str=$(cat)
     printf '\n'
   fi
+  # dedrypt var.
+  # newlines may get squashed, so replace all spaces with newlines
+  # remove ---, var name, !vault, | and empty lines
   printf -- "$str" | sed 's/ /\n/g' | \
   sed '/---\|^.*:\|\!vault\||\|^$/d' | \
   ansible-vault decrypt 2> /dev/null | \
