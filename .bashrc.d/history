@@ -1,0 +1,4 @@
+HISTSIZE=10000
+HISTFILESIZE=10000
+shopt -s histappend
+export HISTCONTROL=ignorespace:ignoredups
