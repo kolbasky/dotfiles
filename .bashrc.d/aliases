@@ -1,5 +1,5 @@
 sshps1() {
-  ssh -o "StrictHostKeyChecking=no" -A -t $1 "bash --rcfile <(echo '. ~/.bashrc ; PS1=\"\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x8C")[\u@\h]-[\t]\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x94")[\w]\\$\[$(tput sgr0)\] \"')"
+  ssh -o "StrictHostKeyChecking=no" -A -t $1 "bash --rcfile <(echo '. ~/.bashrc ; PS1=\"\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x8C")[\u@\h]-[\t]\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x94")[\w]\\$\[$(tput sgr0)\] \" ; HISTSIZE=10000 ; HISTFILESIZE=10000 ; shopt -s histappend ; export HISTCONTROL=ignorespace:ignoredups:erasedups ; PROMPT_COMMAND=\"history -a\"')"
 }
 alias s="sshps1"
 alias ll="ls -lh"

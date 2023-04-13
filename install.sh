@@ -7,7 +7,7 @@ EXCLUDE="$@"
 EXCLUDE=".|..|.git|install.sh|${EXCLUDE// /\|}"
 
 printf '\nCopying dotfiles and dotdirs...\n'
-cp -arv --backup $SRCDIR/!($EXCLUDE) ~/
+cp -arv  $SRCDIR/!($EXCLUDE) ~/
 
 printf '\nInstalling fzf..'
 git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
