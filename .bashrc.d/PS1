@@ -10,7 +10,7 @@ promptCommand () {
   local COLOR="\[$(tput setaf 2)\]";
   if [[ $(git branch 2>/dev/null) ]];
   then
-    (git fetch &)
+    (git fetch &> /dev/null &)
     local GITSTATUS=$(
       if [[ $(git status -bs 2>/dev/null | grep -cv '##') -gt 0 ]];
         then printf "*";
