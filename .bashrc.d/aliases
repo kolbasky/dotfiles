@@ -1,30 +1,17 @@
 sshps1() {
-  ssh -o "StrictHostKeyChecking=no" -o "PreferredAuthentications=publickey" -A -t $1 "bash --rcfile <(echo '. ~/.bashrc ; PS1=\"\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x8C")[\u@\h]-[\t]\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x94")[\w]\\$\[$(tput sgr0)\] \" ; HISTSIZE=10000 ; HISTFILESIZE=10000 ; shopt -s histappend ; export HISTCONTROL=ignorespace:ignoredups:erasedups ; PROMPT_COMMAND=\"history -a\"')"
+  ssh -o "StrictHostKeyChecking=no" -A -t $1 "bash --rcfile <(echo '. ~/.bashrc ; PS1=\"\n\[\$(tput setaf 1)\]$(printf "\xE2\x94\x8C")[\u@\h]-[\t]\n\[\$(tput setaf 1)\]$(printf "\xE2\x94\x94")[\w]\\$\[$(tput sgr0)\] \" ; HISTSIZE=10000 ; HISTFILESIZE=10000 ; shopt -s histappend ; export HISTCONTROL=ignorespace:ignoredups:erasedups ; PROMPT_COMMAND=\"history -a\"')"
 }
-
-alias s="sshps1"
-
-sshps2() {
-  ssh -o "PreferredAuthentications=publickey" -o "StrictHostKeyChecking=no" -A -t i.Lukyanov@$1 "bash --rcfile <(echo '. ~/.bashrc ; PS1=\"\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x8C")[\u@\h]-[\t]\n\[\$(tput setaf 3)\]$(printf "\xE2\x94\x94")[\w]\\$\[$(tput sgr0)\] \" ; HISTSIZE=10000 ; HISTFILESIZE=10000 ; shopt -s histappend     ; export HISTCONTROL=ignorespace:ignoredups:erasedups ; PROMPT_COMMAND=\"history -a\"')"
-}
-
-alias sil="sshps2"
-
+alias s='ssh -o "StrictHostKeyChecking=no" -A'
 alias ll="ls -lh"
-
 alias gitpall="find ~/git/* ~/git/ansible-roles/* -maxdepth 0 -type d | xargs -P 6 -I{} sh -c \"git -C {} pull -v\""
-
 hgrep() {
   grep -i "$1" `find ~/git/ -type f -name hosts` | grep "\..*\." | sed 's/:/~/' | awk -F"~" '{print $2"\t"$1}' | grep -v "${HOME}/git/tmp"  | grep -v "^#" | grep -v "^;" | column -t
 }
-
-alias genpwd="openssl rand -base64 25 | sed 's/[\/+=]//g' | cut -c 2-18"
-
-genpwdv() { 
-  local pwd=$(genpwd); 
-  ansible-vault encrypt_string $pwd 2> /dev/null; 
+hfzf() {
+  grep "\..*\." `find ~/git/ -type f -name hosts` | sed 's/[: ]/~/g' | grep -v ~# | awk -F"~" '{print $2"\t"$1}' | column -t | fzf
 }
-
+alias genpwd="openssl rand -base64 25 | sed 's/[\/+=]//g' | cut -c 2-19"
+alias genpwdv='ansible-vault encrypt_string --vault-password-file ~/.vault-pass $(genpwd) 2> /dev/null'
 vdecr() {
   unset IFS
   # if we have an argument, check wether it is a file.
@@ -32,23 +19,32 @@ vdecr() {
     if [[ -f "$1" ]]; then
       # if argument is a file check if it is fully encrypted file and cat it to decrypt
       if [[ $(head -n1 "$1") == "\$ANSIBLE_VAULT;1.1;AES256" ]]; then
-        cat "$1" | ansible-vault decrypt 2> /dev/null
+        cat "$1" | ansible-vault decrypt --vault-password-file ~/.vault-pass 2> /dev/null
         return 0
       fi
-      # if argument is a file, but not fully encrypted, grep for vault vaules in it
-      # grep uses -- as separator, and IFS is one symbol long, using - as IFS would break some variables
-      # replace -- with #
-      # if vault vars go one after another without empty line, grep won't print separator.
-      # so add # in between
+      # if argument is a file, but not fully encrypted, parse vault vaules from it
       printf 'Reading vault values from file...\n\n'
-      IFS="#"
-      for v in `grep "\!vault |" -A6 "$1" | sed 's/^--$/#/g' | sed -r 's/^(.*:)/#\n\1/g'`;do 
-        if [[ "$v" != "" ]]; then 
-          # print var name and pass string to vdecr. xargs trims spaces.
-          printf "$v" | grep -o "^.*: " | xargs && printf '  ' && vdecr "$v"; 
-        fi ; 
+      local parsing=0
+      local result=""
+      local name=""
+      for line in $(cat $1); do 
+        if [[ $(echo "$line" | grep -c "\!vault") -gt 0 ]] && [[ $parsing -eq 0 ]]; then
+          parsing=1
+        elif [[ $parsing -eq 1 ]] && [[ $( echo $line | grep -c ":") -eq 0 ]]; then
+          result=$(printf "${result}\n${line}")
+        else
+          if [[ $result != "" ]]; then
+            printf "\n\n$(tput setaf 4)$name$(tput sgr0)\n"
+            printf "$result" | vdecr
+            name=""
+            result=""
+            parsing=0
+          fi
+  	    fi
+        if  [[ $( echo "$line" | grep -c ":") -eq 1 ]]; then
+          name="$line"
+        fi
       done
-      unset IFS
       return 0
     fi
     # if argumnent is not a file, just set variable
@@ -67,10 +63,11 @@ vdecr() {
   # remove ---, var name, !vault, | and empty lines
   printf -- "$str" | sed 's/ /\n/g' | \
   sed '/---\|^.*:\|\!vault\||\|^$/d' | \
-  ansible-vault decrypt 2> /dev/null | \
-  tail -n1
+  ansible-vault decrypt --vault-password-file ~/.vault-pass 2> /dev/null #| \
+#  tail -n1
   printf '\n'
-  unset str
-  unset v
 }
+alias ap="ansible-playbook --diff --ask-become-pass --vault-password-file ~/.vault-pass --forks $(nproc)"
+alias ac="ANSIBLE_STDOUT_CALLBACK=default ansible-console --ask-become-pass --vault-password-file ~/.vault-pass --forks $(nproc)"
 
+alias qwe="source ~/venv/rutube-ansible/bin/activate; /usr/bin/ssh-add ~/.ssh/id_rsa ~/.ssh/id_rsa_dev ~/.ssh/id_rsa_my ~/.ssh/id_rsa_vm"
