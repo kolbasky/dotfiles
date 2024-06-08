@@ -3,12 +3,14 @@ sshps1() {
 }
 alias s='ssh -o "StrictHostKeyChecking=no" -A'
 alias ll="ls -lh"
-unalias l
+unalias l &> /dev/null
 l() {
-  if [[ `stat -c %F $1 2>/dev/null` == "regular file" ]]; then
-    less $1
-  else
+  local s=${1:-./}
+  local enc=`file --mime-encoding $s | cut -d: -f2 | xargs`
+  if [[ $enc == "binary" ]] || [[ $enc == "ERROR" ]]; then
     ls -lah --color=always $1 | less -R
+  else
+    less $1
   fi
 }
 alias gitpall="find ~/git/* ~/git/ansible-roles/* -maxdepth 0 -type d | xargs -P 6 -I{} sh -c \"git -C {} pull -v\""
@@ -78,4 +80,3 @@ vdecr() {
 alias ap="ansible-playbook --diff --ask-become-pass --vault-password-file ~/.vault-pass --forks $(nproc)"
 alias ac="ANSIBLE_STDOUT_CALLBACK=default ansible-console --ask-become-pass --vault-password-file ~/.vault-pass --forks $(nproc)"
 
-alias qwe="source ~/venv/rutube-ansible/bin/activate; /usr/bin/ssh-add ~/.ssh/id_rsa ~/.ssh/id_rsa_dev ~/.ssh/id_rsa_my ~/.ssh/id_rsa_vm"
