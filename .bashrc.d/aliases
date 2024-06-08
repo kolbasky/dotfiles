@@ -3,6 +3,14 @@ sshps1() {
 }
 alias s='ssh -o "StrictHostKeyChecking=no" -A'
 alias ll="ls -lh"
+unalias l
+l() {
+  if [[ `stat -c %F $1 2>/dev/null` == "regular file" ]]; then
+    less $1
+  else
+    ls -lah --color=always $1 | less -R
+  fi
+}
 alias gitpall="find ~/git/* ~/git/ansible-roles/* -maxdepth 0 -type d | xargs -P 6 -I{} sh -c \"git -C {} pull -v\""
 hgrep() {
   grep -i "$1" `find ~/git/ -type f -name hosts` | grep "\..*\." | sed 's/:/~/' | awk -F"~" '{print $2"\t"$1}' | grep -v "${HOME}/git/tmp"  | grep -v "^#" | grep -v "^;" | column -t
