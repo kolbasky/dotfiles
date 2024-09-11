@@ -79,4 +79,9 @@ vdecr() {
 }
 alias ap="ansible-playbook --diff --ask-become-pass --vault-password-file ~/.vault-pass --forks $(nproc)"
 alias ac="ANSIBLE_STDOUT_CALLBACK=default ansible-console --ask-become-pass --vault-password-file ~/.vault-pass --forks $(nproc)"
-
+av () {
+    ansible-variables -v --playbook-dir=. --vault-pass-file ~/.vault-pass \
+      -i inventory/$1*/hosts $2 2> /dev/null | \
+      pcregrep -M "$3.*\n(.*\n)*?/.*y[a]*ml(\n/.*)*" | \
+      sed "s:^/:  - /:"
+}
