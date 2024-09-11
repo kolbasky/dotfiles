@@ -79,9 +79,16 @@ vdecr() {
 }
 alias ap="ansible-playbook --diff --ask-become-pass --vault-password-file ~/.vault-pass --forks $(nproc)"
 alias ac="ANSIBLE_STDOUT_CALLBACK=default ansible-console --ask-become-pass --vault-password-file ~/.vault-pass --forks $(nproc)"
-av () {
-    ansible-variables -v --playbook-dir=. --vault-pass-file ~/.vault-pass \
-      -i inventory/$1*/hosts $2 2> /dev/null | \
-      pcregrep -M "$3.*\n(.*\n)*?/.*y[a]*ml(\n/.*)*" | \
-      sed "s:^/:  - /:"
+av() {
+  local vault_pass_file="~/.vault-pass"
+  local inventory_dir="inventory"
+  local hosts_file="hosts"
+  local clr1=$(tput setaf 3)
+  local clr2=$(tput setaf 2)
+  local rst=$(tput sgr0)
+  ansible-variables -v --playbook-dir=. --vault-pass-file $vault_pass_file \
+   -i $inventory_dir/$1*/$hosts_file $2 2> /dev/null | \
+   pcregrep -M "^$3.*\n(.*\n)*?.*/\*\n/.*y[a]*ml(\n/.*)*" | \
+   sed -r "s:^(/.*):  $clr1 \xF0\x9F\x93\x82 \1$rst:" | \
+   sed -r "s/^([a-z0-9\-_]+):/$clr2\1$rst:/"
 }
